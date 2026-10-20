@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estoque</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#E8EBEF;--surface:#FFFFFF;--ink:#16233B;--muted:#5D6980;--line:#CBD2DC;--accent:#16233B;--onaccent:#FFFFFF;--warn:#C93A1E;--warnbg:#FBE3DD;--ok:#1E7A4F;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1624;--surface:#182136;--ink:#E7ECF5;--muted:#93A0B8;--line:#2B3753;--accent:#FFB703;--onaccent:#16233B;--warn:#FF8A70;--warnbg:#3B2420;--ok:#5FD39A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1624;--surface:#182136;--ink:#E7ECF5;--muted:#93A0B8;--line:#2B3753;--accent:#FFB703;--onaccent:#16233B;--warn:#FF8A70;--warnbg:#3B2420;--ok:#5FD39A;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 Barlow,system-ui,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 110px}
+h1{font:700 2.4rem/1 "Barlow Condensed",sans-serif;margin:0 0 14px;letter-spacing:.01em}
+h2{font:700 1.6rem/1.1 "Barlow Condensed",sans-serif;margin:0 0 12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font:700 1.9rem/1 "Barlow Condensed",sans-serif}
+.stat span{color:var(--muted);font-size:.85rem}
+
+
+.stat.low b{color:var(--warn)}
+button.stat{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
+.stat.active{border:2px solid var(--warn);background:var(--warnbg)}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:46px}
+:focus-visible{outline:3px solid #FFB703;outline-offset:2px}
+.list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.item{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--ok);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:center}
+.item.low{border-left-color:var(--warn);animation:blinkbg 1.1s ease-in-out infinite}
+.stat.low.on b{animation:blinkop 1.1s ease-in-out infinite}
+@keyframes blinkbg{0%,100%{background:var(--surface)}50%{background:var(--warnbg)}}
+@keyframes blinkop{0%,100%{opacity:1}50%{opacity:.2}}
+.info{flex:1;min-width:0;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:0;cursor:pointer}
+.info strong{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info small{color:var(--muted)}
+.qty{display:flex;align-items:center;gap:6px}
+.qty b{font:700 3.4rem/1 "Barlow Condensed",sans-serif;min-width:1.6ch;text-align:right;padding-right:4px}
+.round{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 1.3rem/1 Barlow,sans-serif;cursor:pointer}
+.tag{color:var(--warn);font-size:.8rem;font-weight:700;animation:blinkop 1.1s ease-in-out infinite}
+.empty{color:var(--muted);text-align:center;padding:28px 8px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 6px;margin:0 -16px}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;min-height:40px;padding:0 14px;font:600 .9rem Barlow,sans-serif;cursor:pointer}
+.chip.on{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.grp{list-style:none;font:700 1.35rem/1 "Barlow Condensed",sans-serif;color:var(--muted);margin:10px 0 -2px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.top h1{margin:0}
+.who{text-align:right;line-height:1.25}
+.who b{display:block;font-size:1.1rem}
+.who span{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.bar{display:flex;gap:8px;margin-bottom:8px}
+.btn.sm{min-height:40px;font-size:.9rem;padding:0 14px}
+.last{color:var(--muted);font-size:.85rem;margin:0 0 12px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.brand{background:var(--accent);color:var(--onaccent);text-align:center;font:700 .9rem/1 Barlow,sans-serif;letter-spacing:.04em;padding:10px 12px}
+.mark{color:var(--muted);font-size:.85rem;font-weight:600;margin:0 0 6px}
+.tab{flex:1;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 1rem Barlow,sans-serif;cursor:pointer}
+.tab.on{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+body.buying .sv{display:none}
+body:not(.buying) .bv{display:none}
+.item .btn.sm{flex:none}
+.info small.stk{font-size:1.2rem;font-weight:600;color:var(--ink)}
+.item.inbuy{box-shadow:inset 0 0 0 2px var(--accent)}
+.item.inbuy .info strong::after{content:' · na lista';color:var(--accent);font-weight:700;font-size:.85rem}
+#login{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);align-items:center;justify-content:center;overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+body.out #login,body.add #login{display:flex}
+body.out .wrap,body.out .fab{display:none}
+.lcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;width:min(100%,420px)}
+.btn{font:600 1rem Barlow,sans-serif;background:var(--accent);color:var(--onaccent);border:0;border-radius:10px;min-height:48px;padding:0 18px;cursor:pointer}
+.btn.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:none;color:var(--warn);border:1px solid var(--warn)}
+.fab{position:fixed;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));max-width:688px;margin:0 auto;min-height:56px;font-size:1.1rem;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,440px);background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,15,25,.65)}
+label{display:block;font-weight:600;font-size:.9rem;margin:10px 0 4px}
+.code{font-variant-numeric:tabular-nums;color:var(--muted);margin:-6px 0 6px}
+.acts{display:grid;gap:8px;margin-top:16px}
+.acts.two{grid-template-columns:1fr 1fr}
+.err{color:var(--warn);font-size:.9rem;min-height:1.3em;margin:8px 0 0}
+#reader{width:100%;min-height:200px;border-radius:12px;overflow:hidden;background:#000}
+.hint{color:var(--muted);font-size:.9rem;margin:8px 0}
+.ok{color:var(--ok);font-weight:600;min-height:1.4em;margin:8px 0 0}
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translate(-50%,-20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}.item.low,.tag,.stat.low.on b{animation:none}.item.low{background:var(--warnbg)}}
+</style>
+</head>
+<body class="out">
+<div class="brand">App criado por NOXARTE dev</div>
+<div class="wrap">
+  <div class="top">
+    <h1>Estoque</h1>
+    <div class="who"><b id="whoName"></b><span id="clock"></span></div>
+  </div>
+  <div class="bar">
+    <button class="btn alt sm" id="newUser" type="button">Novo usuário</button>
+    <button class="btn alt sm" id="logout" type="button">Sair</button>
+  </div>
+  <p class="last" id="last"></p>
+  <div class="tabs"><button class="tab on" id="tabE" type="button">Estoque</button><button class="tab" id="tabC" type="button">Lista de compras (0)</button></div>
+  <div class="stats sv">
+    
+    <div class="stat"><b id="s1">0</b><span>Produtos</span></div>
+    <div class="stat"><b id="s2">0</b><span>Unidades</span></div>
+    <button type="button" class="stat low" id="lowBtn" aria-pressed="false"><b id="s3">0</b><span id="s3l">Estoque baixo</span></button>
+  </div>
+  <input class="sv" id="q" type="search" placeholder="Buscar por nome ou código" aria-label="Buscar produto">
+  <div class="chips sv" id="chips" role="group" aria-label="Categorias"></div>
+  <ul class="list sv" id="list"></ul>
+  <p class="sv" style="text-align:center;margin-top:22px"><button class="btn alt" id="chPw" type="button" style="min-height:40px;font-size:.9rem">Alterar senha de gerente</button></p>
+  <section class="bv" id="buyView">
+    <h2>Lista de compras</h2>
+    <p class="hint" id="buyDate"></p>
+    <p class="hint" id="buyLast"></p>
+    <ul class="list" id="buyList"></ul>
+    <div class="acts" style="margin-top:16px"><button class="btn" id="buyDone" type="button">Finalizar compras</button></div>
+    <div class="acts two" style="margin-top:8px"><button class="btn alt" id="buyCopy" type="button">Copiar lista</button><button class="btn danger" id="buyClear" type="button">Limpar lista</button></div>
+  </section>
+</div>
+<div id="login">
+  <div class="lcard">
+    <p class="mark">App criado por NOXARTE dev</p>
+    <h2 style="font-size:2.4rem">Estoque</h2>
+    <p class="hint" id="lmsg"></p>
+    <div id="lUserW"><label for="lUser">Responsável</label><select id="lUser"></select></div>
+    <div id="lNameW"><label for="lName">Nome do responsável</label><input id="lName" autocomplete="name"></div>
+    <label for="lPass">Senha</label><input id="lPass" type="password" autocomplete="current-password">
+    <div id="lPass2W"><label for="lPass2">Confirmar senha</label><input id="lPass2" type="password" autocomplete="new-password"></div>
+    <p class="err" id="lerr" role="alert"></p>
+    <div class="acts"><button class="btn" id="lgo" type="button">Entrar</button><button class="btn alt" id="lcancel" type="button">Cancelar</button></div>
+  </div>
+</div>
+<button class="btn fab" id="scanBtn" type="button">Escanear código de barras</button>
+
+<dialog id="scan">
+  <h2>Escanear produto</h2>
+  <label for="mode" style="margin-top:0">Ao ler um produto cadastrado</label>
+  <select id="mode"><option value="1">Dar entrada (+1)</option><option value="-1">Dar saída (−1)</option></select>
+  <div id="reader" style="margin-top:10px"></div>
+  <p class="ok" id="sok" role="status"></p>
+  <p class="hint">Produtos cadastrados são registrados na hora a cada leitura. Códigos novos abrem o cadastro. Se a câmera ao vivo não abrir, tire uma foto do código ou digite-o.</p>
+  <div style="display:flex;gap:8px">
+    <input id="manual" inputmode="numeric" placeholder="Digite o código" aria-label="Código do produto">
+    <button class="btn" id="useManual" type="button">Usar</button>
+  </div>
+  <label class="btn alt" style="display:flex;align-items:center;justify-content:center;margin:10px 0 0;cursor:pointer">Tirar foto do código<input id="photo" type="file" accept="image/*" capture="environment" hidden></label>
+  <div id="reader2" style="position:absolute;left:-9999px;width:300px"></div>
+  <p class="err" id="serr" role="alert"></p>
+  <div class="acts"><button class="btn alt" id="scanClose" type="button">Fechar</button></div>
+</dialog>
+
+<dialog id="prod">
+  <h2 id="ptitle">Novo produto</h2>
+  <p class="code" id="pcode"></p>
+  <label for="pname">Nome do produto</label>
+  <input id="pname" placeholder="Ex.: Arroz 5 kg" autocomplete="off">
+  <label for="pcat">Categoria</label>
+  <select id="pcat"></select>
+  
+  
+  <label for="pmin">Avisar quando restar até (0 = sem aviso)</label>
+  <input id="pmin" type="number" inputmode="numeric" min="0">
+  <label for="pqty" id="qlabel">Quantidade</label>
+  <input id="pqty" type="number" inputmode="numeric" min="0">
+  <p class="err" id="perr" role="alert"></p>
+  <div class="acts" id="aNew"><button class="btn" id="bnew" type="button">Cadastrar produto</button></div>
+  <div class="acts two" id="aOld">
+    <button class="btn" id="bin" type="button">Dar entrada</button>
+    <button class="btn" id="bout" type="button">Dar saída</button>
+    <button class="btn danger" id="bdel" type="button">Excluir produto</button>
+    <button class="btn alt" id="bsave" type="button">Salvar alterações</button>
+  </div>
+  <div class="acts"><button class="btn alt" id="pclose" type="button">Fechar</button></div>
+</dialog>
+<dialog id="done">
+  <h2>Finalizar compras?</h2>
+  <p id="doneMsg"></p>
+  <div class="acts two"><button class="btn alt" id="doneNo" type="button">Cancelar</button><button class="btn" id="doneYes" type="button">Sim, finalizar</button></div>
+</dialog>
+<dialog id="pw">
+  <h2 id="pwt">Senha de gerente</h2>
+  <p class="hint" id="pwd"></p>
+  <div id="pw1w"><label for="pw1" id="pw1l">Senha de gerente</label><input id="pw1" type="password" autocomplete="off"></div>
+  <div id="pw2w"><label for="pw2">Nova senha</label><input id="pw2" type="password" autocomplete="new-password"></div>
+  <div id="pw3w"><label for="pw3">Confirmar nova senha</label><input id="pw3" type="password" autocomplete="new-password"></div>
+  <p class="err" id="pwerr" role="alert"></p>
+  <div class="acts two"><button class="btn alt" id="pwcancel" type="button">Cancelar</button><button class="btn" id="pwok" type="button">Confirmar</button></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+(function(){
+  var KEY='estoque-v1',$=function(i){return document.getElementById(i)};
+  var items=[];
+  try{items=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){items=[]}
+  var cur=null,qr=null,onlyLow=false,catSel='',user=null,buy=[];
+  try{buy=JSON.parse(localStorage.getItem('estoque-compras-v1')||'[]')}catch(e){buy=[]}
+  var CATS=['Açougue','Frios e laticínios','Padaria','Congelados','Mercado','Hortifruti','Bebidas','Papelaria','Limpeza','Outros'];
+  var LET={A:'Açougue',F:'Frios e laticínios',P:'Padaria',C:'Congelados',M:'Mercado',H:'Hortifruti',B:'Bebidas',X:'Papelaria',L:'Limpeza'};
+  function catOf(p){return p.cat||'Outros'}
+  
+  
+  function save(){
+    if(user){meta={by:user,at:Date.now()};try{localStorage.setItem('estoque-ultima-v1',JSON.stringify(meta))}catch(e){}showLast()}
+    try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}
+  }
+  function find(c){return items.filter(function(p){return p.code===c})[0]}
+  function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},2200)}
+
+  function drawChips(){
+    drawBuy();
+    var box=$('chips'),sc=box.scrollLeft,counts={};
+    items.forEach(function(p){var k=catOf(p);counts[k]=(counts[k]||0)+1});
+    if(catSel&&!counts[catSel])catSel='';
+    box.innerHTML='';
+    [''].concat(CATS).forEach(function(c){
+      if(c&&!counts[c])return;
+      var b=document.createElement('button');b.type='button';b.className='chip'+(catSel===c?' on':'');
+      b.textContent=(c||'Todas')+' ('+(c?counts[c]:items.length)+')';
+      b.setAttribute('aria-pressed',catSel===c?'true':'false');
+      b.onclick=function(){catSel=c;draw()};
+      box.appendChild(b);
+    });
+    box.scrollLeft=sc;
+  }
+  function fillCat(v){var s=$('pcat');if(!s.options.length)CATS.forEach(function(c){s.add(new Option(c,c))});s.value=v}
+  function draw(){
+    drawChips();
+    var term=$('q').value.trim().toLowerCase(),ul=$('list');
+    var units=0,low=0;
+    items.forEach(function(p){units+=p.qty;if(p.min>0&&p.qty<=p.min)low++});
+    $('s1').textContent=items.length;$('s2').textContent=units;
+    
+    $('s3').textContent=low;$('s3').parentNode.classList.toggle('on',low>0);
+    if(!low)onlyLow=false;
+    var lb=$('lowBtn');lb.classList.toggle('active',onlyLow);lb.setAttribute('aria-pressed',onlyLow?'true':'false');
+    $('s3l').textContent=onlyLow?'Toque para ver todos':'Estoque baixo';
+    var rs=items.filter(function(p){return (!term||p.name.toLowerCase().indexOf(term)>-1||p.code.indexOf(term)>-1)&&(!onlyLow||(p.min>0&&p.qty<=p.min))&&(!catSel||catOf(p)===catSel)})
+      .sort(function(a,b){var d=CATS.indexOf(catOf(a))-CATS.indexOf(catOf(b));return d||a.name.localeCompare(b.name,'pt-BR')});
+    ul.innerHTML='';
+    if(!rs.length){
+      var e=document.createElement('li');e.className='empty';
+      e.textContent=onlyLow?'Nenhum produto com estoque baixo.':items.length?'Nenhum produto encontrado.':'Estoque vazio. Toque em Escanear código de barras para cadastrar o primeiro produto.';
+      ul.appendChild(e);return;
+    }
+    var lastCat='',counts={};
+    rs.forEach(function(p){var k=catOf(p);counts[k]=(counts[k]||0)+1});
+    rs.forEach(function(p){
+      var cc=catOf(p);
+      if(cc!==lastCat){lastCat=cc;var g=document.createElement('li');g.className='grp';g.textContent=cc+' ('+counts[cc]+')';ul.appendChild(g)}
+      var li=document.createElement('li');li.className='item'+(p.min>0&&p.qty<=p.min?' low':'')+(buy.indexOf(p.code)>-1?' inbuy':'');
+      var info=document.createElement('button');info.type='button';info.className='info';
+      var n=document.createElement('strong');n.textContent=p.name;
+      var s=document.createElement('small');s.textContent=p.code+(p.min>0&&p.qty<=p.min?' · ':'');
+      if(p.min>0&&p.qty<=p.min){var t=document.createElement('span');t.className='tag';t.textContent='Estoque baixo';s.appendChild(t)}
+      info.appendChild(n);info.appendChild(s);
+      info.onclick=function(){toggleBuy(p.code)};
+      var q=document.createElement('div');q.className='qty';
+      
+      var b=document.createElement('b');b.textContent=p.qty;
+      
+      
+      
+      q.appendChild(b);
+      var ed=document.createElement('button');ed.type='button';ed.className='btn alt sm';ed.textContent='Editar';ed.setAttribute('aria-label','Editar '+p.name);ed.onclick=function(){openProd(p.code)};
+      li.appendChild(info);li.appendChild(q);li.appendChild(ed);ul.appendChild(li);
+    });
+  }
+
+  // produto
+  function openProd(code){
+    var p=find(code);cur={code:code,isNew:!p};
+    $('ptitle').textContent=p?'Produto encontrado':'Novo produto';
+    $('pcode').textContent='Código '+code;
+    $('pname').value=p?p.name:'';
+    $('pmin').value=p?p.min:5;
+    fillCat(p?catOf(p):(catSel||'Outros'));
+    
+    $('pqty').value=1;
+    $('qlabel').textContent=p?'Quantidade a movimentar (em estoque: '+p.qty+')':'Quantidade inicial';
+    $('aNew').hidden=!!p;$('aOld').hidden=!p;$('perr').textContent='';
+    if(!$('prod').open)$('prod').showModal();
+    (p?$('pqty'):$('pname')).focus();
+  }
+  function readForm(){
+    var name=$('pname').value.trim(),min=parseInt($('pmin').value,10),qty=parseInt($('pqty').value,10);
+    if(!name){$('perr').textContent='Informe o nome do produto.';$('pname').focus();return null}
+    if(isNaN(min)||min<0){$('perr').textContent='Informe um aviso de estoque válido (0 ou mais).';return null}
+    if(isNaN(qty)||qty<0){$('perr').textContent='Informe uma quantidade válida.';$('pqty').focus();return null}
+    
+    
+    return {name:name,min:min,qty:qty,cat:$('pcat').value};
+  }
+  $('bnew').onclick=function(){
+    var f=readForm();if(!f)return;
+    items.push({code:cur.code,name:f.name,min:f.min,qty:f.qty,cat:f.cat});
+    save();draw();$('prod').close();toast('Produto cadastrado');
+  };
+  function move(sign){
+    var f=readForm();if(!f)return;
+    if(f.qty<1){$('perr').textContent='Informe pelo menos 1 unidade.';return}
+    var p=find(cur.code);
+    if(sign<0&&f.qty>p.qty){$('perr').textContent='Só há '+p.qty+' em estoque.';return}
+    p.name=f.name;p.min=f.min;p.cat=f.cat;p.qty+=sign*f.qty;
+    save();draw();$('prod').close();toast(sign>0?'Entrada registrada':'Saída registrada');
+  }
+  $('bin').onclick=function(){move(1)};
+  $('bout').onclick=function(){move(-1)};
+  $('bsave').onclick=function(){
+    var f=readForm();if(!f)return;var p=find(cur.code);
+    p.name=f.name;p.min=f.min;p.cat=f.cat;save();draw();$('prod').close();toast('Alterações salvas');
+  };
+  $('bdel').onclick=function(){
+    var p=find(cur.code);
+    var code=cur.code;
+    askPw('verify',function(){
+      items=items.filter(function(x){return x.code!==code});
+      save();draw();$('prod').close();toast('Produto excluído');
+    });
+  };
+  // cadastro inicial da lista de compras (executa uma vez)
+  var SEEDCAT='AAAAAAAAAA'+'PPPPCFFCMF'+'FFFFFMMMMM'+'MMMFFMMFFM'+'MAMMAFMHMA'+'AAMFMMMMFF'+'MMMMMMMMMM'+'MMMMMMFMPM'+'CPMCMMMMMM'+'MMMMMMMCCC'+'MCCCCMAXXX'+'XXXXXXXXXX'+'XXXXLLLLLL'+'LLLLLXXHHH'+'HHHHHHHHHH'+'HHHHHHHBBB'+'BBBBBBBXX';
+  var SEED=('Hambúrguer 90g|Hambúrguer 125g|Hambúrguer 160g|Frango|Salsicha|Contra filé|Linguiça prensada|Hambúrguer vegano|Costela|Pernil|Pão francês|Pão cachorro quente|Pão brioche|Pão hambúrguer|Batata frita|Cheddar bisnaga|Cheddar fatiado|Nuggets|Palmito|Gorgonzola|Peperoni|Queijo coalho|Provolone fatiado|Mussarela fatiada|Presunto fatiado|Batata palha|Ketchup sachê|Maionese sachê|Mostarda sachê|Molho p/ salada sachê|Milho|Azeitona verde fatiada|Skala|Catupiry|Mussarela peça|Creme de leite|Leite condensado|Parmesão peça|Provolone peça|Champignon|Aliche|Lombo canadense|Molho p/ salada sachê|Orégano|Calabresa|Presunto peça|Pimenta calabresa|Brócolis|Alho frito|Carne seca|Camarão|Filé mignon|Azeitona preta|Requeijão copo|Milho|Tomate seco|'
+    +'Atum|Doritos|Mussarela de búfala|Peito de peru|Ervilha|Mel|Goiabada bisnaga|Coco ralado|Chocolate Nestlé|Capuccino|Brilho morango|Bombom|Chocolate branco bisnaga|Chocolate ao leite bisnaga|Fermento|Farinha|Sal|Açúcar|Barbecue|Gergelim|Salame fatiado|Nutella|Sequilhos/suspiro|Marshmallow|Petit gâteau|Brownie|Pó chocolate|Sorvete|Mistura p/ milk shake|Calda morango|Calda chocolate|Chantilly spray|Gelo seco|Nitrogênio líquido|Óleo|Gordura fritura|Cebola crispy|Mel|Fubá|Farinha panco|Amido de milho|Pastelzinho carne|Pastelzinho pres/queijo|Pastelzinho catupiry|Geleia pimenta|Coxinha abóbora|Coxinha frango|Tira frango|Tira tilápia|Ovo|Hambúrguer de tilápia|'
+    +'Papel fire|Dinossauros|Óculos canudo|Colher maionese|Cx pizza grande|Cx pizza brotinho|Marmitex|Pote camarão|Pratinho bolo|Garfinho|Vela|Copo descartável|Copo café|Canudo|Bobina cozinha|Guardanapo salão 10x20|Guardanapo 31x30|Álcool|Detergente|Sabão em pó|Água sanitária|Esponja louça|Fibraço|Bombril|Desinfetante|Sabonete líquido|Saco lixo 100l|Saco lixo 40l|Sacola refri 2l|Papel toalha|Manjericão|Shitake|Shimeji|Abacaxi|Morango|Banana|Limão|Laranja|Alface|Rúcula|Hortelã|Salsinha|Cenoura|Cebola roxa|Alho poró|Abacaxi|Alho descascado|Tomate cereja|Cebola|Batata|'
+    +'Long neck|Coca mini|Chop Heineken|Itubaína|Cerveja Skol|Cerveja Brahma|Vodka|Original|Coca KS|Amstel|Copo tulipa|Copo suco').split('|');
+  (function(){
+    var FK='estoque-import-lista-v1';
+    try{if(localStorage.getItem(FK))return}catch(e){return}
+    SEED.forEach(function(n,i){
+      var c=String(i+1).padStart(4,'0');
+      if(!find(c))items.push({code:c,name:n,min:0,qty:0,cat:LET[SEEDCAT.charAt(i)]});
+    });
+    save();
+    try{localStorage.setItem(FK,'1')}catch(e){}
+  })();
+
+  // categorias dos produtos já cadastrados (executa uma vez)
+  (function(){
+    var MK='estoque-categorias-v1';
+    try{if(localStorage.getItem(MK))return}catch(e){return}
+    items.forEach(function(p){
+      if(p.cat)return;
+      var i=parseInt(p.code,10);
+      if(/^\d{4}$/.test(p.code)&&i>=1&&i<=SEEDCAT.length)p.cat=LET[SEEDCAT.charAt(i-1)];
+    });
+    save();try{localStorage.setItem(MK,'1')}catch(e){}
+  })();
+
+  // senha de gerente
+  var PK='estoque-gerente-v1',pwCb=null,pwMode='';
+  function getPw(){try{return JSON.parse(localStorage.getItem(PK)||'null')}catch(e){return null}}
+  function hash(s){
+    if(window.crypto&&crypto.subtle)return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')});
+    var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;
+    return Promise.resolve(String(h));
+  }
+  function askPw(mode,cb){
+    pwMode=getPw()?mode:'create';pwCb=cb||null;
+    $('pw1w').hidden=pwMode==='create';
+    $('pw2w').hidden=pwMode==='verify';
+    $('pw3w').hidden=pwMode==='verify';
+    $('pw1l').textContent=pwMode==='change'?'Senha atual':'Senha de gerente';
+    $('pwt').textContent=pwMode==='create'?'Criar senha de gerente':pwMode==='change'?'Alterar senha de gerente':'Senha de gerente';
+    $('pwd').textContent=pwMode==='create'?'Defina a senha que vai autorizar exclusões de produtos. Guarde-a bem.':pwMode==='verify'?'Digite a senha para excluir o produto.':'';
+    ['pw1','pw2','pw3'].forEach(function(i){$(i).value=''});
+    $('pwerr').textContent='';
+    $('pw').showModal();
+    (pwMode==='create'?$('pw2'):$('pw1')).focus();
+  }
+  $('pwok').onclick=function(){
+    var e=$('pwerr');e.textContent='';
+    var st=getPw(),v1=$('pw1').value,v2=$('pw2').value,v3=$('pw3').value;
+    function setNew(){
+      if(v2.length<4){e.textContent='A senha precisa ter pelo menos 4 caracteres.';return}
+      if(v2!==v3){e.textContent='A confirmação não confere com a nova senha.';return}
+      var salt=Math.random().toString(36).slice(2);
+      hash(salt+v2).then(function(h){
+        try{localStorage.setItem(PK,JSON.stringify({salt:salt,hash:h}))}catch(x){e.textContent='Não foi possível salvar a senha neste navegador.';return}
+        var cb=pwCb;pwCb=null;$('pw').close();toast('Senha de gerente salva');if(cb)cb();
+      });
+    }
+    if(pwMode==='create'){setNew();return}
+    hash(st.salt+v1).then(function(h){
+      if(h!==st.hash){e.textContent='Senha incorreta.';$('pw1').value='';$('pw1').focus();return}
+      if(pwMode==='change'){setNew();return}
+      var cb=pwCb;pwCb=null;$('pw').close();if(cb)cb();
+    });
+  };
+  $('pw').onkeydown=function(ev){if(ev.key==='Enter')$('pwok').click()};
+  $('pwcancel').onclick=function(){$('pw').close()};
+  $('pw').addEventListener('close',function(){pwCb=null});
+  $('chPw').onclick=function(){askPw('change')};
+  $('pclose').onclick=function(){$('prod').close()};
+
+  // câmera
+  function stopCam(){
+    if(!qr)return;var q=qr;qr=null;
+    try{q.stop().then(function(){q.clear()}).catch(function(){})}catch(e){}
+  }
+  var last='',lastAt=0;
+  function found(code){
+    code=String(code).trim();if(!code)return;
+    var now=Date.now();
+    if(code===last&&now-lastAt<2000)return;
+    last=code;lastAt=now;
+    var p=find(code);
+    if(!p){
+      try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}
+      stopCam();$('scan').close();openProd(code);return;
+    }
+    var s=parseInt($('mode').value,10);
+    $('serr').textContent='';$('sok').textContent='';
+    if(s<0&&p.qty<1){$('serr').textContent=p.name+': estoque zerado, não há o que retirar.';return}
+    p.qty+=s;save();draw();
+    try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}
+    $('sok').textContent=(s>0?'Entrada: ':'Saída: ')+p.name+' · agora '+p.qty;
+    $('manual').value='';
+  }
+  $('scanBtn').onclick=function(){
+    $('serr').textContent='';$('sok').textContent='';$('manual').value='';last='';
+    $('scan').showModal();
+    if(typeof Html5Qrcode==='undefined'){$('serr').textContent='Leitor de câmera indisponível. Digite o código.';return}
+    try{
+      var F=Html5QrcodeSupportedFormats;
+      qr=new Html5Qrcode('reader',{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128,F.CODE_39,F.ITF,F.QR_CODE],useBarCodeDetectorIfSupported:true,verbose:false});
+      qr.start({facingMode:'environment'},{fps:10,qrbox:{width:260,height:150}},found,function(){})
+        .catch(function(){qr=null;$('serr').textContent='A câmera ao vivo não abriu. Use o botão Tirar foto do código ou digite o código abaixo.'});
+    }catch(e){qr=null;$('serr').textContent='Não foi possível abrir a câmera. Digite o código.'}
+  };
+  $('useManual').onclick=function(){
+    var v=$('manual').value.trim();
+    if(!v){$('serr').textContent='Digite o código do produto.';return}
+    found(v);
+  };
+  $('manual').onkeydown=function(e){if(e.key==='Enter')$('useManual').click()};
+  $('scanClose').onclick=function(){$('scan').close()};
+  $('scan').addEventListener('close',stopCam);
+  $('photo').onchange=function(){
+    var f=this.files&&this.files[0];this.value='';if(!f)return;
+    $('serr').textContent='';$('sok').textContent='Lendo a foto…';
+    if(typeof Html5Qrcode==='undefined'){$('sok').textContent='';$('serr').textContent='Leitor indisponível. Digite o código.';return}
+    var q2=new Html5Qrcode('reader2',{verbose:false,useBarCodeDetectorIfSupported:true});
+    q2.scanFile(f,false).then(function(t){last='';$('sok').textContent='';found(t)})
+      .catch(function(){$('sok').textContent='';$('serr').textContent='Não consegui ler o código na foto. Chegue mais perto, deixe o código reto e bem iluminado.'});
+  };
+  $('lowBtn').onclick=function(){if(+$('s3').textContent>0){onlyLow=!onlyLow;draw()}};
+  // lista de compras
+  function saveBuy(){try{localStorage.setItem('estoque-compras-v1',JSON.stringify(buy))}catch(e){}}
+  function toggleBuy(code){
+    var i=buy.indexOf(code);
+    if(i>-1){buy.splice(i,1);toast('Removido da lista de compras')}else{buy.push(code);toast('Adicionado à lista de compras')}
+    saveBuy();draw();
+  }
+  function buyItems(){
+    return buy.map(function(c){return find(c)}).filter(Boolean).sort(function(a,b){var d=CATS.indexOf(catOf(a))-CATS.indexOf(catOf(b));return d||a.name.localeCompare(b.name,'pt-BR')});
+  }
+  function tomorrow(){var d=new Date();d.setDate(d.getDate()+1);return d}
+  function drawBuy(){
+    var rs=buyItems();
+    $('tabC').textContent='Lista de compras ('+rs.length+')';
+    $('buyDate').textContent='Para comprar em '+tomorrow().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    $('buyLast').textContent=doneInfo?'Última compra finalizada por '+doneInfo.by+' em '+fmt(new Date(doneInfo.at))+' ('+doneInfo.n+(doneInfo.n===1?' item)':' itens)'):'';
+    var ul=$('buyList');ul.innerHTML='';
+    if(!rs.length){var e=document.createElement('li');e.className='empty';e.textContent='Nenhum produto na lista. Na aba Estoque, toque em um produto para adicioná-lo aqui.';ul.appendChild(e);return}
+    var last='';
+    rs.forEach(function(p){
+      var cc=catOf(p);
+      if(cc!==last){last=cc;var g=document.createElement('li');g.className='grp';g.textContent=cc;ul.appendChild(g)}
+      var li=document.createElement('li');li.className='item';li.style.borderLeftColor='var(--accent)';
+      var info=document.createElement('div');info.className='info';
+      var n=document.createElement('strong');n.textContent=p.name;
+      var s=document.createElement('small');s.className='stk';s.textContent='Em estoque: '+p.qty;
+      info.appendChild(n);info.appendChild(s);
+      var x=document.createElement('button');x.type='button';x.className='btn danger sm';x.textContent='Remover';x.setAttribute('aria-label','Remover '+p.name+' da lista');
+      x.onclick=function(){toggleBuy(p.code)};
+      li.appendChild(info);li.appendChild(x);ul.appendChild(li);
+    });
+  }
+  function tab(b){document.body.classList.toggle('buying',b);$('tabE').classList.toggle('on',!b);$('tabC').classList.toggle('on',b);window.scrollTo(0,0)}
+  $('tabE').onclick=function(){tab(false)};
+  $('tabC').onclick=function(){tab(true)};
+  var doneInfo=null;
+  try{doneInfo=JSON.parse(localStorage.getItem('estoque-compra-final-v1')||'null')}catch(e){doneInfo=null}
+  $('buyDone').onclick=function(){
+    var n=buyItems().length;
+    if(!n){toast('A lista está vazia');return}
+    $('doneMsg').textContent='A lista de compras tem '+n+(n===1?' item':' itens')+'. Ao finalizar, a lista será zerada para você montar uma nova no próximo dia.';
+    $('done').showModal();
+  };
+  $('doneNo').onclick=function(){$('done').close()};
+  $('doneYes').onclick=function(){
+    var n=buyItems().length;
+    doneInfo={by:user||'-',at:Date.now(),n:n};
+    try{localStorage.setItem('estoque-compra-final-v1',JSON.stringify(doneInfo))}catch(e){}
+    buy=[];saveBuy();$('done').close();draw();toast('Compras finalizadas. Lista zerada.');
+  };
+  $('buyClear').onclick=function(){
+    if(!buy.length)return;
+    if(!confirm('Limpar toda a lista de compras?'))return;
+    buy=[];saveBuy();draw();toast('Lista limpa');
+  };
+  $('buyCopy').onclick=function(){
+    var rs=buyItems();if(!rs.length){toast('A lista está vazia');return}
+    var t=tomorrow(),txt='Lista de compras - '+two(t.getDate())+'/'+two(t.getMonth()+1)+'/'+t.getFullYear(),last='';
+    rs.forEach(function(p){var cc=catOf(p);if(cc!==last){last=cc;txt+='\n\n'+cc}txt+='\n- '+p.name});
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){toast('Lista copiada')},function(){toast('Não foi possível copiar')});
+    else toast('Não foi possível copiar neste navegador');
+  };
+
+  // login e responsável
+  var UK='estoque-usuarios-v1',SK='estoque-sessao-v1',users=[],meta=null,authMode='login';
+  try{users=JSON.parse(localStorage.getItem(UK)||'[]')}catch(e){users=[]}
+  try{meta=JSON.parse(localStorage.getItem('estoque-ultima-v1')||'null')}catch(e){meta=null}
+  function two(n){return String(n).padStart(2,'0')}
+  function fmt(d){return two(d.getDate())+'/'+two(d.getMonth()+1)+'/'+d.getFullYear()+' · '+two(d.getHours())+':'+two(d.getMinutes())}
+  function tick(){$('clock').textContent=fmt(new Date())}
+  function showLast(){$('last').textContent=meta?'Última alteração: '+meta.by+' em '+fmt(new Date(meta.at)):'Nenhuma alteração registrada ainda.'}
+  function setMode(m){
+    authMode=m;
+    $('lUserW').hidden=m!=='login';
+    $('lNameW').hidden=m==='login';
+    $('lPass2W').hidden=m==='login';
+    $('lcancel').hidden=m!=='add';
+    $('lgo').textContent=m==='login'?'Entrar':m==='add'?'Cadastrar usuário':'Criar acesso e entrar';
+    $('lmsg').textContent=m==='login'?'Escolha o responsável e digite a senha.':m==='add'?'Cadastre um novo responsável pelo estoque.':'Primeiro acesso: cadastre o responsável pelo estoque.';
+    var s=$('lUser');s.innerHTML='';users.forEach(function(u){s.add(new Option(u.name,u.name))});
+    ['lName','lPass','lPass2'].forEach(function(i){$(i).value=''});$('lerr').textContent='';
+  }
+  function enter(name){
+    user=name;try{sessionStorage.setItem(SK,name)}catch(e){}
+    document.body.classList.remove('out','add');
+    $('whoName').textContent='Responsável: '+name;tick();showLast();draw();
+  }
+  $('lgo').onclick=function(){
+    var e=$('lerr');e.textContent='';var pass=$('lPass').value;
+    if(authMode==='login'){
+      var u=users.filter(function(x){return x.name===$('lUser').value})[0];
+      if(!u){e.textContent='Escolha um responsável.';return}
+      hash(u.salt+pass).then(function(h){
+        if(h!==u.hash){e.textContent='Senha incorreta.';$('lPass').value='';$('lPass').focus();return}
+        enter(u.name);
+      });
+      return;
+    }
+    var name=$('lName').value.trim();
+    if(!name){e.textContent='Informe o nome do responsável.';$('lName').focus();return}
+    if(users.some(function(x){return x.name.toLowerCase()===name.toLowerCase()})){e.textContent='Já existe um usuário com esse nome.';return}
+    if(pass.length<4){e.textContent='A senha precisa ter pelo menos 4 caracteres.';return}
+    if(pass!==$('lPass2').value){e.textContent='A confirmação não confere com a senha.';return}
+    var salt=Math.random().toString(36).slice(2);
+    hash(salt+pass).then(function(h){
+      users.push({name:name,salt:salt,hash:h});
+      try{localStorage.setItem(UK,JSON.stringify(users))}catch(x){}
+      if(authMode==='add'){document.body.classList.remove('add');toast('Usuário cadastrado')}
+      else enter(name);
+    });
+  };
+  $('login').onkeydown=function(ev){if(ev.key==='Enter')$('lgo').click()};
+  $('lcancel').onclick=function(){document.body.classList.remove('add')};
+  $('newUser').onclick=function(){setMode('add');document.body.classList.add('add');$('lName').focus()};
+  $('logout').onclick=function(){
+    user=null;try{sessionStorage.removeItem(SK)}catch(e){}
+    document.body.classList.remove('add');document.body.classList.add('out');
+    setMode(users.length?'login':'create');
+  };
+  setInterval(tick,15000);
+  var sess=null;try{sess=sessionStorage.getItem(SK)}catch(e){}
+  if(sess&&users.some(function(x){return x.name===sess}))enter(sess);
+  else setMode(users.length?'login':'create');
+
+  $('q').oninput=draw;
+  draw();
+})();
+</script>
+</body>
+</html>
